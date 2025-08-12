@@ -11,16 +11,29 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Categories table
-CREATE TABLE IF NOT EXISTS categories (
-    id VARCHAR(50) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    slug VARCHAR(100) UNIQUE NOT NULL,
+-- Projects table (main focus now)
+CREATE TABLE IF NOT EXISTS projects (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    category VARCHAR(100) NOT NULL,
+    thumbnail_image TEXT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- Portfolio items table
+-- Project images table (multiple images per project)
+CREATE TABLE IF NOT EXISTS project_images (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    image_url TEXT NOT NULL,
+    alt_text VARCHAR(255),
+    display_order INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+);
+
+-- Legacy portfolio items table (keep for data migration)
 CREATE TABLE IF NOT EXISTS portfolio_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     src TEXT NOT NULL,
@@ -29,8 +42,7 @@ CREATE TABLE IF NOT EXISTS portfolio_items (
     width INTEGER NOT NULL,
     height INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (category) REFERENCES categories (id) ON DELETE RESTRICT
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Testimonials table
@@ -43,16 +55,6 @@ CREATE TABLE IF NOT EXISTS testimonials (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
-
--- Insert default categories
-INSERT OR IGNORE INTO categories (id, name, slug) VALUES
-    ('all', 'All', 'all'),
-    ('living-room', 'Living Room', 'living-room'),
-    ('kitchen', 'Kitchen', 'kitchen'),
-    ('bedroom', 'Bedroom', 'bedroom'),
-    ('dining-room', 'Dining Room', 'dining-room'),
-    ('office', 'Office', 'office'),
-    ('bathroom', 'Bathroom', 'bathroom');
 
 -- Insert default admin user (password: admin123)
 -- Note: In production, use a stronger password and hash it properly

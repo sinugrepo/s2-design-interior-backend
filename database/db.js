@@ -23,18 +23,44 @@ export const initializeDatabase = () => {
         )
       `);
 
-      // Categories table
+      // Projects table (main focus now)
       db.run(`
-        CREATE TABLE IF NOT EXISTS categories (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          slug TEXT UNIQUE NOT NULL,
+        CREATE TABLE IF NOT EXISTS projects (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT NOT NULL,
+          description TEXT,
+          category TEXT NOT NULL,
+          thumbnail_image TEXT NOT NULL,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
 
-      // Portfolio items table
+      // Project categories table
+      db.run(`
+        CREATE TABLE IF NOT EXISTS project_categories (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT UNIQUE NOT NULL,
+          display_name TEXT NOT NULL,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Project images table
+      db.run(`
+        CREATE TABLE IF NOT EXISTS project_images (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          project_id INTEGER NOT NULL,
+          image_url TEXT NOT NULL,
+          alt_text TEXT,
+          display_order INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (project_id) REFERENCES projects (id) ON DELETE CASCADE
+        )
+      `);
+
+      // Legacy portfolio items table (keep for now)
       db.run(`
         CREATE TABLE IF NOT EXISTS portfolio_items (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,8 +70,7 @@ export const initializeDatabase = () => {
           width INTEGER NOT NULL,
           height INTEGER NOT NULL,
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (category) REFERENCES categories (id)
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
       `);
 
@@ -83,35 +108,9 @@ export const initializeDatabase = () => {
 
 // Insert default data
 const insertDefaultData = () => {
-  // Default categories
-  const categories = [
-    { id: 'all', name: 'All', slug: 'all' },
-    { id: 'living-room', name: 'Living Room', slug: 'living-room' },
-    { id: 'kitchen', name: 'Kitchen', slug: 'kitchen' },
-    { id: 'bedroom', name: 'Bedroom', slug: 'bedroom' },
-    { id: 'dining-room', name: 'Dining Room', slug: 'dining-room' },
-    { id: 'office', name: 'Office', slug: 'office' },
-    { id: 'bathroom', name: 'Bathroom', slug: 'bathroom' }
-  ];
-
-  // Insert categories first
-  let categoriesInserted = 0;
-  categories.forEach(category => {
-    db.run(
-      `INSERT OR IGNORE INTO categories (id, name, slug) VALUES (?, ?, ?)`,
-      [category.id, category.name, category.slug],
-      (err) => {
-        if (!err) {
-          categoriesInserted++;
-          // Once all categories are inserted, insert other data
-          if (categoriesInserted === categories.length) {
-            insertTestimonials();
-            insertPortfolioItems();
-          }
-        }
-      }
-    );
-  });
+  insertDefaultCategories();
+  insertTestimonials();
+  insertSampleProjects();
 };
 
 // Insert testimonials
@@ -158,53 +157,111 @@ const insertTestimonials = () => {
   });
 };
 
-// Insert portfolio items
-const insertPortfolioItems = () => {
-  // Default portfolio items
-  const portfolioItems = [
-    
-    // New portfolio items from R2 CDN
-    // Bedroom category - Portrait ratios with variations
-    { src: 'https://sinug.my.id/bedroom.jpg', alt: 'Modern Bedroom Design 1', category: 'bedroom', width: 6, height: 8 },
-    { src: 'https://sinug.my.id/bedroom2.jpg', alt: 'Contemporary Bedroom Design 2', category: 'bedroom', width: 7, height: 10 },
-    { src: 'https://sinug.my.id/bedroom3.jpg', alt: 'Elegant Bedroom Design 3', category: 'bedroom', width: 5, height: 7 },
-    { src: 'https://sinug.my.id/bedroom4.jpg', alt: 'Minimalist Bedroom Design 4', category: 'bedroom', width: 8, height: 10 },
-    { src: 'https://sinug.my.id/bedroom5.jpg', alt: 'Luxurious Bedroom Design 5', category: 'bedroom', width: 6, height: 9 },
-    { src: 'https://sinug.my.id/bedroom6.jpg', alt: 'Sophisticated Bedroom Design 6', category: 'bedroom', width: 5, height: 8 },
-    { src: 'https://sinug.my.id/bedroom7.jpg', alt: 'Stylish Bedroom Design 7', category: 'bedroom', width: 7, height: 9 },
-    
-    // Dining Room category - Portrait ratios
-    { src: 'https://sinug.my.id/diningroom.jpg', alt: 'Elegant Dining Room Design', category: 'dining-room', width: 6, height: 8 },
-    { src: 'https://sinug.my.id/diningroom1.jpg', alt: 'Contemporary Dining Room Design', category: 'dining-room', width: 7, height: 10 },
-    
-    // Living Room category (family room mapped to living room) - Portrait ratios
-    { src: 'https://sinug.my.id/familyroom.jpg', alt: 'Cozy Family Room Design', category: 'living-room', width: 5, height: 7 },
-    { src: 'https://sinug.my.id/familyroom2.jpg', alt: 'Modern Family Room Design 2', category: 'living-room', width: 8, height: 10 },
-    { src: 'https://sinug.my.id/familyroom3.jpg', alt: 'Comfortable Family Room Design 3', category: 'living-room', width: 6, height: 9 },
-    { src: 'https://sinug.my.id/familyroom4.jpg', alt: 'Spacious Family Room Design 4', category: 'living-room', width: 5, height: 8 },
-    
-    // Kitchen category - Portrait ratios
-    { src: 'https://sinug.my.id/kitchen1.jpg', alt: 'Modern Kitchen Design 1', category: 'kitchen', width: 7, height: 9 },
-    { src: 'https://sinug.my.id/kitchen2.jpg', alt: 'Contemporary Kitchen Design 2', category: 'kitchen', width: 6, height: 8 },
-    { src: 'https://sinug.my.id/kitchen3.jpg', alt: 'Elegant Kitchen Design 3', category: 'kitchen', width: 8, height: 10 },
-    { src: 'https://sinug.my.id/kitchen4.jpg', alt: 'Minimalist Kitchen Design 4', category: 'kitchen', width: 5, height: 7 },
-    { src: 'https://sinug.my.id/kitchen5.jpg', alt: 'Luxurious Kitchen Design 5', category: 'kitchen', width: 6, height: 9 },
-    
-    // Living Room category - Portrait ratios
-    { src: 'https://sinug.my.id/livingroom.jpg', alt: 'Stylish Living Room Design', category: 'living-room', width: 7, height: 10 },
-    { src: 'https://sinug.my.id/livingroom1.jpg', alt: 'Modern Living Room Design 1', category: 'living-room', width: 5, height: 8 },
-    { src: 'https://sinug.my.id/livingroom2.jpg', alt: 'Contemporary Living Room Design 2', category: 'living-room', width: 6, height: 8 },
-    { src: 'https://sinug.my.id/livingroom3.jpg', alt: 'Elegant Living Room Design 3', category: 'living-room', width: 8, height: 10 },
-    { src: 'https://sinug.my.id/livingroom4.jpg', alt: 'Sophisticated Living Room Design 4', category: 'living-room', width: 7, height: 9 },
-    
-    // Office category - Portrait ratio
-    { src: 'https://sinug.my.id/office1.jpg', alt: 'Modern Office Design 1', category: 'office', width: 6, height: 9 }
+// Insert default project categories
+const insertDefaultCategories = () => {
+  const defaultCategories = [
+    { name: 'office', displayName: 'Office' },
+    { name: 'residential', displayName: 'Residential' },
+    { name: 'apartment', displayName: 'Apartment' },
+    { name: 'public-space', displayName: 'Public Space' }
   ];
 
-  portfolioItems.forEach(item => {
+  defaultCategories.forEach(category => {
     db.run(
-      `INSERT OR IGNORE INTO portfolio_items (src, alt, category, width, height) VALUES (?, ?, ?, ?, ?)`,
-      [item.src, item.alt, item.category, item.width, item.height]
+      `INSERT OR IGNORE INTO project_categories (name, display_name) VALUES (?, ?)`,
+      [category.name, category.displayName]
+    );
+  });
+};
+
+// Insert sample projects
+const insertSampleProjects = () => {
+  // Sample projects for the new structure
+  const sampleProjects = [
+    {
+      title: 'Modern City Office Complex',
+      description: 'A contemporary office space design that promotes productivity and collaboration with open-plan layouts and modern amenities.',
+      category: 'office',
+      thumbnail_image: 'https://sinug.my.id/office1.jpg',
+      images: [
+        { url: 'https://sinug.my.id/office1.jpg', alt: 'Modern Office Reception Area', order: 1 },
+        { url: 'https://sinug.my.id/office2.jpg', alt: 'Open Plan Workspace', order: 2 },
+        { url: 'https://sinug.my.id/office3.jpg', alt: 'Executive Meeting Room', order: 3 }
+      ]
+    },
+    {
+      title: 'Luxury Residential Villa',
+      description: 'An elegant residential design featuring sophisticated living spaces with premium materials and custom furnishings.',
+      category: 'residential',
+      thumbnail_image: 'https://sinug.my.id/livingroom.jpg',
+      images: [
+        { url: 'https://sinug.my.id/livingroom.jpg', alt: 'Grand Living Room', order: 1 },
+        { url: 'https://sinug.my.id/livingroom1.jpg', alt: 'Elegant Sitting Area', order: 2 },
+        { url: 'https://sinug.my.id/bedroom.jpg', alt: 'Master Bedroom Suite', order: 3 },
+        { url: 'https://sinug.my.id/kitchen1.jpg', alt: 'Gourmet Kitchen', order: 4 }
+      ]
+    },
+    {
+      title: 'Modern Downtown Apartment',
+      description: 'A stylish urban apartment design maximizing space efficiency while maintaining luxury and comfort.',
+      category: 'apartment',
+      thumbnail_image: 'https://sinug.my.id/familyroom.jpg',
+      images: [
+        { url: 'https://sinug.my.id/familyroom.jpg', alt: 'Open Living Area', order: 1 },
+        { url: 'https://sinug.my.id/kitchen2.jpg', alt: 'Compact Modern Kitchen', order: 2 },
+        { url: 'https://sinug.my.id/bedroom2.jpg', alt: 'Contemporary Bedroom', order: 3 }
+      ]
+    },
+    {
+      title: 'City Shopping Mall Interior',
+      description: 'A vibrant public space design creating an engaging shopping experience with modern retail environments.',
+      category: 'public-space',
+      thumbnail_image: 'https://sinug.my.id/diningroom.jpg',
+      images: [
+        { url: 'https://sinug.my.id/diningroom.jpg', alt: 'Main Concourse Area', order: 1 },
+        { url: 'https://sinug.my.id/diningroom1.jpg', alt: 'Food Court Design', order: 2 }
+      ]
+    },
+    {
+      title: 'Corporate Headquarters',
+      description: 'A prestigious office design for a leading corporation featuring executive offices and collaborative spaces.',
+      category: 'office',
+      thumbnail_image: 'https://sinug.my.id/office2.jpg',
+      images: [
+        { url: 'https://sinug.my.id/office2.jpg', alt: 'Executive Office Suite', order: 1 },
+        { url: 'https://sinug.my.id/office3.jpg', alt: 'Conference Center', order: 2 }
+      ]
+    },
+    {
+      title: 'Contemporary Family Home',
+      description: 'A warm and inviting residential design perfect for modern family living with functional and beautiful spaces.',
+      category: 'residential',
+      thumbnail_image: 'https://sinug.my.id/familyroom2.jpg',
+      images: [
+        { url: 'https://sinug.my.id/familyroom2.jpg', alt: 'Family Living Room', order: 1 },
+        { url: 'https://sinug.my.id/familyroom3.jpg', alt: 'Cozy Reading Nook', order: 2 },
+        { url: 'https://sinug.my.id/kitchen3.jpg', alt: 'Family Kitchen', order: 3 },
+        { url: 'https://sinug.my.id/bedroom3.jpg', alt: 'Children\'s Bedroom', order: 4 }
+      ]
+    }
+  ];
+
+  // Insert projects
+  sampleProjects.forEach(project => {
+    db.run(
+      `INSERT OR IGNORE INTO projects (title, description, category, thumbnail_image) VALUES (?, ?, ?, ?)`,
+      [project.title, project.description, project.category, project.thumbnail_image],
+      function(err) {
+        if (!err && this.lastID) {
+          // Insert project images
+          project.images.forEach(image => {
+            db.run(
+              `INSERT INTO project_images (project_id, image_url, alt_text, display_order) VALUES (?, ?, ?, ?)`,
+              [this.lastID, image.url, image.alt, image.order]
+            );
+          });
+        }
+      }
     );
   });
 };
