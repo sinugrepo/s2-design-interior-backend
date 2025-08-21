@@ -16,10 +16,24 @@ export const initializeDatabase = () => {
         CREATE TABLE IF NOT EXISTS users (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           username TEXT UNIQUE NOT NULL,
+          email TEXT UNIQUE NOT NULL,
           password TEXT NOT NULL,
           role TEXT DEFAULT 'admin',
           created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
           updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Password reset tokens table for OTP functionality
+      db.run(`
+        CREATE TABLE IF NOT EXISTS password_reset_tokens (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          user_id INTEGER NOT NULL,
+          token TEXT NOT NULL,
+          expires_at DATETIME NOT NULL,
+          used INTEGER DEFAULT 0,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
         )
       `);
 
@@ -90,8 +104,8 @@ export const initializeDatabase = () => {
       // Create default admin user
       const hashedPassword = bcrypt.hashSync(config.admin.password, 10);
       db.run(
-        `INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)`,
-        [config.admin.username, hashedPassword, 'admin'],
+        `INSERT OR IGNORE INTO users (username, email, password, role) VALUES (?, ?, ?, ?)`,
+        [config.admin.username, 'admin@s2design.com', hashedPassword, 'admin'],
         (err) => {
           if (err) {
             reject(err);

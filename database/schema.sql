@@ -5,10 +5,22 @@
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(20) DEFAULT 'admin',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Password reset tokens table for OTP functionality
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token VARCHAR(10) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 -- Projects table (main focus now)
@@ -58,8 +70,8 @@ CREATE TABLE IF NOT EXISTS testimonials (
 
 -- Insert default admin user (password: admin123)
 -- Note: In production, use a stronger password and hash it properly
-INSERT OR IGNORE INTO users (username, password, role) VALUES
-    ('admin', '$2a$10$rOzJmZKz.9GF5B5B5B5B5OuJ5B5B5B5B5B5B5B5B5B5B5B5B5B5B5', 'admin');
+INSERT OR IGNORE INTO users (username, email, password, role) VALUES
+    ('admin', 'admin@s2design.com', '$2a$10$rOzJmZKz.9GF5B5B5B5B5OuJ5B5B5B5B5B5B5B5B5B5B5B5B5B5B5', 'admin');
 
 -- Insert sample portfolio items
 INSERT OR IGNORE INTO portfolio_items (src, alt, category, width, height) VALUES

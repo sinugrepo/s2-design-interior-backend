@@ -5,6 +5,7 @@ A complete RESTful API with authentication for managing portfolio items, testimo
 ## 🚀 Features
 
 - **🔐 JWT Authentication**: Secure admin login system
+- **📧 Forgot Password**: Email-based OTP password reset system
 - **📊 SQLite Database**: Lightweight, file-based database
 - **🖼️ Portfolio Management**: Full CRUD operations for portfolio items
 - **💬 Testimonials Management**: Complete testimonial system with ratings
@@ -48,6 +49,33 @@ A complete RESTful API with authentication for managing portfolio items, testimo
 
 The API will be available at `http://localhost:3001`
 
+## 📧 Email Setup (Required for Forgot Password)
+
+To enable the forgot password feature, you need to configure email settings:
+
+1. **Create `.env` file** in the backend directory:
+   ```env
+   EMAIL_SERVICE=gmail
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_SECURE=false
+   EMAIL_USER=your-email@gmail.com
+   EMAIL_PASSWORD=your-app-password
+   EMAIL_FROM=S2 Design Interior <noreply@yourdomain.com>
+   ```
+
+2. **For Gmail users**:
+   - Enable 2-Factor Authentication
+   - Generate App Password (not your regular password)
+   - Use the 16-character app password in EMAIL_PASSWORD
+
+3. **Test email configuration**:
+   ```bash
+   npm run test-email
+   ```
+
+4. **See detailed setup guide**: `email-setup.md`
+
 ## 🗄️ Database
 
 The application uses **SQLite** for data storage:
@@ -83,6 +111,30 @@ Content-Type: application/json
     "username": "admin",
     "role": "admin"
   }
+}
+```
+
+### Forgot Password
+Request password reset via email:
+```bash
+POST /api/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "admin@s2design.com"
+}
+```
+
+### Reset Password
+Reset password using OTP:
+```bash
+POST /api/auth/reset-password
+Content-Type: application/json
+
+{
+  "email": "admin@s2design.com",
+  "otp": "123456",
+  "newPassword": "newpassword123"
 }
 ```
 
