@@ -13,11 +13,11 @@ try {
   // Update admin email to your email
   const result = await dbRun(
     'UPDATE users SET email = ? WHERE username = ? AND role = ?',
-    ['cloudfastmodeng@gmail.com', 'admin', 'admin']
+    ['tokoomsugi@gmail.com', 'admin', 'admin']
   );
 
   console.log('\n✅ Admin email updated successfully!');
-  console.log('Admin email changed to: cloudfastmodeng@gmail.com');
+  console.log('Admin email changed to: tokoomsugi@gmail.com');
 
   // Verify update
   const adminUser = await dbGet('SELECT * FROM users WHERE username = ?', ['admin']);
